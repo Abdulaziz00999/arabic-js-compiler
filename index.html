@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مترجم الأكواد العربية إلى JavaScript</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        header h1 {
+            color: #38bdf8;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #94a3b8;
+        }
+
+        .examples-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #334155;
+            border-color: #38bdf8;
+        }
+
+        .btn-run {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-run:hover {
+            background-color: #0369a1;
+        }
+
+        .btn-export {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-export:hover {
+            background-color: #15803d;
+        }
+
+        .btn-contact {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-contact:hover {
+            background-color: #4f46e5;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .editor-box {
+            background-color: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .box-header {
+            background-color: #0f172a;
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #38bdf8;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            background-color: transparent;
+            color: #f8fafc;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            direction: rtl;
+        }
+
+        .output-code {
+            direction: ltr;
+            text-align: left;
+        }
+
+        .terminal {
+            background-color: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #4ade80;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .terminal .error {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>مترجم الأكواد العربية إلى JavaScript</h1>
+        <p>اكتب كودك باللغة العربية وسيتم تحويله وتنفيذه مباشرة!</p>
+    </header>
+
+    <div class="examples-bar">
+        <button class="btn" onclick="loadExample('hello')">مثال 1: طباعة متغيرة</button>
+        <button class="btn" onclick="loadExample('condition')">مثال 2: الشروط (إذا)</button>
+        <button class="btn" onclick="loadExample('loop')">مثال 3: التكرار (لكل)</button>
+        <button class="btn btn-run" onclick="runCode()">▶ تشغيل الكود</button>
+        <button class="btn btn-export" onclick="exportCode()">📥 تصدير الكود (.js)</button>
+        <button class="btn btn-contact" onclick="contactSupport()">💬 للإبلاغ عن مشكلة</button>
+    </div>
+
+    <div class="main-container">
+        <!-- مربع كتابة الكود بالعربي -->
+        <div class="editor-box">
+            <div class="box-header">الكود بالعربي</div>
+            <textarea id="arabicCode" placeholder="اكتب الكود بالعربي هنا..."></textarea>
+        </div>
+
+        <!-- مربع الكود المترجم إلى JS -->
+        <div class="editor-box">
+            <div class="box-header">الكود المترجم (JavaScript)</div>
+            <textarea id="jsCode" class="output-code" readonly placeholder="سيظهر كود JavaScript هنا تلقائياً..."></textarea>
+        </div>
+    </div>
+
+    <!-- النافذة البرمجية المخرجة (Terminal) -->
+    <div class="editor-box">
+        <div class="box-header">مخرجات التشغيل (Terminal / Console)</div>
+        <div id="terminal" class="terminal">> جاهز للتشغيل...</div>
+    </div>
+
+    <script>
+        // قاموس ترجمة الكلمات المفتاحية
+        const dictionary = [
+            { ar: 'متغير', js: 'let' },
+            { ar: 'ثابت', js: 'const' },
+            { ar: 'دالة', js: 'function' },
+            { ar: 'إرجع', js: 'return' },
+            { ar: 'إذا', js: 'if' },
+            { ar: 'إلا_إذا', js: 'else if' },
+            { ar: 'إلا', js: 'else' },
+            { ar: 'لكل', js: 'for' },
+            { ar: 'طالما', js: 'while' },
+            { ar: 'اطبع', js: 'console.log' },
+            { ar: 'صحيح', js: 'true' },
+            { ar: 'خطأ', js: 'false' }
+        ];
+
+        const arabicCodeInput = document.getElementById('arabicCode');
+        const jsCodeOutput = document.getElementById('jsCode');
+        const terminal = document.getElementById('terminal');
+
+        // ترقية الترجمة أثناء الكتابة
+        arabicCodeInput.addEventListener('input', translateCode);
+
+        function translateCode() {
+            let code = arabicCodeInput.value;
+
+            // استبدال الكلمات العربية بمقابلها في JavaScript
+            dictionary.forEach(item => {
+                const regex = new RegExp(item.ar, 'g');
+                code = code.replace(regex, item.js);
+            });
+
+            jsCodeOutput.value = code;
+        }
+
+        // تشغيل الكود وحساب المخرجات
+        function runCode() {
+            translateCode();
+            terminal.innerHTML = '';
+            
+            const jsCode = jsCodeOutput.value;
+
+            // إعادة توجيه console.log للعرض في الـ Terminal الخاصة بالصفحة
+            const logs = [];
+            const originalLog = console.log;
+            console.log = function(...args) {
+                logs.append ? logs.append(args.join(' ')) : logs.push(args.join(' '));
+                originalLog.apply(console, args);
+            };
+
+            try {
+                // تنفيذ كود الجافاسكربت
+                new Function(jsCode)();
+                
+                if (logs.length > 0) {
+                    terminal.innerHTML = logs.map(log => `> ${log}`).join('<br>');
+                } else {
+                    terminal.innerHTML = '> تم تنفيذ الكود بنجاح (بدون مخرجات طباعة).';
+                }
+            } catch (error) {
+                terminal.innerHTML = `<span class="error">خطأ برمجي: ${error.message}</span>`;
+            }
+
+            // استرجاع دالة console.log الأصلية
+            console.log = originalLog;
+        }
+
+        // دالة تصدير وتنزيل الملف بصيغة JavaScript
+        function exportCode() {
+            translateCode();
+            const codeContent = jsCodeOutput.value;
+
+            if (!codeContent.trim()) {
+                alert("لا يوجد كود لتصديره!");
+                return;
+            }
+
+            const blob = new Blob([codeContent], { type: 'text/javascript;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'script.js';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // دالة التواصل للإبلاغ عن مشكلة عبر واتساب
+        function contactSupport() {
+            const username = "abu_munib_";
+            alert("لإبلاغ عن مشكلة أو الاستفسار، يمكنك التواصل عبر واتساب على اسم المستخدم:\n@" + username);
+            // يمكنك توجيههم لفتح واتساب أو ترك رسالة
+            window.open('https://wa.me/', '_blank');
+        }
+
+        // أمثلة جاهزة للتجربة
+        function loadExample(type) {
+            if (type === 'hello') {
+                arabicCodeInput.value = 
+`متغير الاسم = "عبدالعزيز";
+اطبع("مرحباً بك يا " + الاسم);`;
+            } else if (type === 'condition') {
+                arabicCodeInput.value = 
+`متغير الدرجة = 85;
+
+إذا (الدرجة >= 50) {
+    اطبع("مبروك، أنت ناجح!");
+} إلا {
+    اطبع("حاول مرة أخرى.");
+}`;
+            } else if (type === 'loop') {
+                arabicCodeInput.value = 
+`لكل (متغير ت = 1; ت <= 5; ت++) {
+    اطبع("الرقم الحالي هو: " + ت);
+}`;
+            }
+            translateCode();
+        }
+
+        // تحميل المثال الأول عند الفتح
+        loadExample('hello');
+    </script>
+
+</body>
+</html>
